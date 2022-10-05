@@ -19,6 +19,14 @@ player_count = 0
 bot = commands.Bot(command_prefix='!', intents=intents)
 
 
+def resetValues():
+    global players, monitored_msg_id, channel_id, stored_msg, player_count
+    players = {}
+    monitored_msg_id = 0
+    channel_id = 0
+    stored_msg = ""
+    player_count = 0
+
 def createSignupList():
     global stored_msg
     temp_msg = stored_msg
@@ -60,6 +68,8 @@ async def create(ctx, num='5'):
         msg = await channel.fetch_message(monitored_msg_id)
         await msg.edit(content="This STACK has been closed")
 
+    resetValues()
+
     if num == '5':
         player_count = 5
         stored_msg = 'A new 5s has been created! React below to join the queue! \nCurrent Queue: '
@@ -70,7 +80,6 @@ async def create(ctx, num='5'):
         stored_msg = 'A new ??s has been created! React below to join the queue! \nCurrent Queue: '
     msg = await ctx.channel.send(stored_msg)
 
-    players = {}
     monitored_msg_id = msg.id
     channel_id = ctx.channel.id
 
@@ -129,6 +138,7 @@ async def automatic_close(msg_id):
         global channel_id
         message = await bot.get_channel(channel_id).fetch_message(msg_id)
         await message.edit(content="This stack has expired please create a new one")
+        resetValues()
 
 
 
