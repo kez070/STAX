@@ -13,7 +13,7 @@ players = {}
 monitored_msg_id = 0
 channel_id = 0
 stored_msg = ""
-running_session = True
+player_count = 0
 
 bot = commands.Bot(command_prefix='!', intents=intents)
 
@@ -47,21 +47,27 @@ async def create(ctx, num='5'):
         return user.name not in players
     print("triggered")
 
-    global stored_msg
-    if num == '5':
-        stored_msg = 'A new 5s has been created! React below to join the queue! \nCurrent Queue: '
-    elif num == '10':
-        stored_msg = 'A new 10s has been created! React below to join the queue! \nCurrent Queue: '
-    else:
-        stored_msg = 'A new ??s has been created! React below to join the queue! \nCurrent Queue: '
-    msg = await ctx.channel.send(stored_msg)
-
     global players
     global monitored_msg_id
     global channel_id
     global running_session
+    global player_count
+    global stored_msg
 
-    running_session = False
+    if monitored_msg_id != 0:
+        channel = bot.get_channel(channel_id)
+        msg = await channel.fetch_message(monitored_msg_id)
+        await msg.edit(content="This STACK has been closed")
+
+    if num == '5':
+        player_count = 5
+        stored_msg = 'A new 5s has been created! React below to join the queue! \nCurrent Queue: '
+    elif num == '10':
+        player_count = 10
+        stored_msg = 'A new 10s has been created! React below to join the queue! \nCurrent Queue: '
+    else:
+        stored_msg = 'A new ??s has been created! React below to join the queue! \nCurrent Queue: '
+    msg = await ctx.channel.send(stored_msg)
 
     players = {}
     monitored_msg_id = msg.id
@@ -69,13 +75,6 @@ async def create(ctx, num='5'):
 
     emoji = '\N{THUMBS UP SIGN}'
     await msg.add_reaction(emoji)
-
-    # running_session = True
-    # while running_session:
-    #     reaction, user = await bot.wait_for("reaction_add", check=check)
-    #     players[user.id] = user.name
-    #     await msg.edit(content=createSignupList())
-
 
 @bot.event
 async def on_raw_reaction_add(payload):
@@ -93,9 +92,10 @@ async def on_raw_reaction_add(payload):
         channel = bot.get_channel(channel_id)
         msg = await channel.fetch_message(msg_id)
         await msg.edit(content=createSignupList())
-        if len(players.keys()) == 4:
+        global player_count
+        if len(players.keys()) == (player_count-1):
             await channel.send("@here -1")
-        elif len(players.keys()) == 3:
+        elif len(players.keys()) == (player_count-2):
             await channel.send("@here -2")
 
 
@@ -114,9 +114,11 @@ async def on_raw_reaction_remove(payload):
         channel = bot.get_channel(channel_id)
         msg = await channel.fetch_message(msg_id)
         await msg.edit(content=createSignupList())
-        if len(players.keys()) == 4:
+
+        global player_count
+        if len(players.keys()) == (player_count-1):
             await channel.send("@here -1")
-        elif len(players.keys()) == 3:
+        elif len(players.keys()) == (player_count-2):
             await channel.send("@here -2")
 
 bot.run(TOKEN)
