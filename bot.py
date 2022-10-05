@@ -1,5 +1,6 @@
 import os
 
+import asyncio
 import discord
 from discord.ext import commands
 from dotenv import load_dotenv
@@ -75,6 +76,7 @@ async def create(ctx, num='5'):
 
     emoji = '\N{THUMBS UP SIGN}'
     await msg.add_reaction(emoji)
+    await automatic_close(msg.id)
 
 @bot.event
 async def on_raw_reaction_add(payload):
@@ -120,5 +122,14 @@ async def on_raw_reaction_remove(payload):
             await channel.send("@here -1")
         elif len(players.keys()) == (player_count-2):
             await channel.send("@here -2")
+
+
+async def automatic_close(msg_id):
+        await asyncio.sleep(30*60)
+        global channel_id
+        message = await bot.get_channel(channel_id).fetch_message(msg_id)
+        await message.edit(content="This stack has expired please create a new one")
+
+
 
 bot.run(TOKEN)
